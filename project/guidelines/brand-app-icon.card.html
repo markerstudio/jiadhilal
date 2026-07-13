@@ -1,0 +1,23 @@
+<!-- @dsCard group="Brand" viewport="700x220" name="App Icon & Avatar" subtitle="Gradient mark on rounded-square" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; font-family: var(--font-sans); background: var(--gray-100); display: flex; align-items: center; justify-content: center; gap: 28px; height: 220px; }
+  .ico { border-radius: 26%; overflow: hidden; box-shadow: var(--shadow-brand); }
+  .a { width: 120px; height: 120px; }
+  .b { width: 80px; height: 80px; }
+  .c { width: 52px; height: 52px; border-radius: 50%; }
+  .ico img { width: 100%; height: 100%; display: block; }
+  .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+  <div class="col"><div class="ico a"><img src="../assets/app-icon.png" alt="app icon" /></div><span class="lbl">app · 26% radius</span></div>
+  <div class="col"><div class="ico b"><img src="../assets/app-icon.png" alt="app icon small" /></div><span class="lbl">tile</span></div>
+  <div class="col"><div class="ico c"><img src="../assets/app-icon.png" alt="avatar" /></div><span class="lbl">avatar</span></div>
+</body>
+</html>

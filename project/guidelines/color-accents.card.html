@@ -1,0 +1,23 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Neon Accents — Green & Red" subtitle="High-energy signals; use sparingly" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; font-family: var(--font-sans); background: var(--char-black); padding: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .sw { border-radius: var(--radius-md); height: 124px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .hex { font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="sw" style="background:var(--green-neon); box-shadow:var(--glow-green); color:#003d00"><span class="tag">Green · live</span><span class="hex">#00f700</span></div>
+    <div class="sw" style="background:var(--green-ink); color:#fff"><span class="tag">Green ink</span><span class="hex">#00b800</span></div>
+    <div class="sw" style="background:var(--red-neon); box-shadow:var(--glow-red); color:#fff"><span class="tag">Red · effort</span><span class="hex">#ff2e5b</span></div>
+    <div class="sw" style="background:var(--red-ink); color:#fff"><span class="tag">Red ink</span><span class="hex">#e01e49</span></div>
+  </div>
+</body>
+</html>

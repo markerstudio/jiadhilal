@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Corner Radii" subtitle="xs 4 → 2xl 40 → pill" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; font-family: var(--font-sans); background: var(--surface-card); padding: 18px 24px; display: flex; align-items: center; gap: 18px; height: 160px; box-sizing: border-box; }
+  .c { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 74px; height: 74px; background: var(--grad-brand); }
+  .t { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="c"><div class="box" style="border-radius:var(--radius-xs)"></div><span class="t">xs · 4</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-sm)"></div><span class="t">sm · 8</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-md)"></div><span class="t">md · 12</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-lg)"></div><span class="t">lg · 18</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-xl)"></div><span class="t">xl · 28</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-2xl)"></div><span class="t">2xl · 40</span></div>
+  <div class="c"><div class="box" style="border-radius:var(--radius-pill)"></div><span class="t">pill</span></div>
+</body>
+</html>
