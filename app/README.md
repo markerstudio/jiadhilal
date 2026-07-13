@@ -1,9 +1,15 @@
-# Jiad Hilal — Coaching App
+# Jiad Hilal — Coaching App + Coach Admin
 
-A real **Vite + React + TypeScript** implementation of the Jiad Hilal coaching-app
-design (mobile, dark theme). Recreated from the design handoff in [`../project`](../project)
-— the design-system tokens, primitive components, and the four app screens are ported
-to production TSX with the brand CSS tokens wired in.
+Mobile-first **Vite + React + TypeScript** app on the Jiad Hilal design system.
+Two surfaces in one deploy:
+
+- **Client app** (`/`) — Today dashboard, Train (program + history), active workout with
+  set logging, Progress (volume chart, PRs), Profile. Bottom tab bar on mobile; left rail
+  + centered column on desktop (≥900px).
+- **Coach admin** (`/admin`, coach role only) — analytics dashboard, client roster +
+  client detail (progress, sessions, PRs, program assignment), program builder
+  (workouts/exercises/set prescriptions), and coach notes that land on each client's
+  Today screen.
 
 ## Run
 
@@ -12,45 +18,56 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-Other scripts: `npm run build` (typecheck + production build), `npm run typecheck`,
-`npm run preview`.
+Other scripts: `npm run build` (typecheck + production build), `npm run typecheck`, `npm run preview`.
 
-## The flow
+## Demo mode vs Supabase
 
-The app is an interactive click-through, exactly as designed:
+The app picks its backend at build time:
 
-**Log in & train** → **Today** dashboard → tap the workout card / *Start workout* →
-**Active workout** (check off sets, watch the progress bar fill) → back → the bottom
-tab bar switches **Today / Train / Progress / Profile**.
+- **No env vars → demo mode.** Data lives in localStorage, seeded with a coach
+  (Jiad), three clients, a program, and ~6 weeks of session history. The login screen
+  shows one-tap **Demo: client** / **Demo: coach** buttons; any password works.
+- **Env vars set → Supabase.** Real auth (email/password) and Postgres with row-level
+  security.
+
+### Wiring up Supabase
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run [`../supabase/schema.sql`](../supabase/schema.sql) in the SQL editor
+   (tables, RLS policies, signup trigger), then optionally
+   [`../supabase/seed.sql`](../supabase/seed.sql) for a starter program.
+3. Create users (Dashboard → Authentication → Add user). Each signup auto-creates a
+   `profiles` row. Promote the coach:
+   `update public.profiles set role = 'coach' where email = '…';`
+4. Copy `.env.example` → `.env` and fill in
+   `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+   (Dashboard → Project Settings → API). For production, add the same two vars in
+   **Vercel → Project → Settings → Environment Variables** and redeploy.
 
 ## Structure
 
 ```
 src/
-  App.tsx                 phone frame, status bar, bottom tab bar, routing (the "AppShell")
-  main.tsx                React entry
-  styles/
-    styles.css            global entry — imports tokens, base reset, reduced-motion
-    tokens/               brand CSS custom properties (colors, type, spacing, effects, fonts)
-  components/             design-system primitives, ported 1:1 from ../project/components
-    Button, IconButton, Input, Checkbox, Switch,
-    Card, Badge, Avatar, StatTile, ProgressRing, ProgressBar, Tabs, Icon
-  screens/
-    LoginScreen, TodayScreen, WorkoutScreen, ProgressScreen, ProfileScreen
-  assets/logo-mark-white.png
+  App.tsx                router + auth gates (client vs coach)
+  main.tsx
+  styles/                design tokens (verbatim from the brand system) + base css
+  components/            design-system primitives (Button, Card, StatTile, …) + ui helpers
+  layouts/               ClientLayout (tabs/rail) · AdminLayout (sidebar/top bar)
+  screens/               client: Login, Today, Train, Workout, Progress, Profile
+  admin/                 coach: Dashboard, Clients, ClientDetail, Programs, ProgramEditor
+  lib/
+    types.ts             domain types + DataStore interface
+    derive.ts            pure stats derivations (streaks, volume, PRs, next workout)
+    demoStore.ts/demoData.ts   localStorage store + seed (demo mode)
+    supabaseStore.ts     Supabase implementation of DataStore
+    store.ts             picks the active store from env
+    AuthContext.tsx      auth for both modes
 ```
 
-## Notes on fidelity
+## Notes
 
-- **Design tokens are verbatim** — the CSS files under `src/styles/tokens/` are copied
-  unchanged from the design bundle, so colors (`#6200ff` neon purple, `#00f700` neon
-  green, `#ff2e5b` neon red), radii, shadows, and motion match exactly.
-- **Icons** use [`lucide-react`](https://lucide.dev) (the design's chosen set) as a proper
-  npm dependency, replacing the prototype's runtime CDN `<Icon>` helper. Same glyphs,
-  same 2px stroke.
-- **Fonts** are Archivo (display/body) + JetBrains Mono (data), loaded from Google Fonts
-  via `tokens/fonts.css` — the substitution flagged in the original handoff. Swap in
-  licensed brand fonts there if/when they're supplied.
-- Components keep the prototype's inline-style approach so numeric values (paddings,
-  sizes, line-heights) stay pixel-identical to the source rather than being re-snapped to
-  a grid.
+- Design tokens under `src/styles/tokens/` are copied verbatim from the brand manual
+  (`#6200ff` / `#00f700` / `#ff2e5b` / `#232323`; Archivo + JetBrains Mono via Google
+  Fonts — a flagged substitution, swap in licensed files when available).
+- Icons: [lucide-react](https://lucide.dev), 2px stroke.
+- SPA routing works on Vercel via the `rewrites` entry in the root `vercel.json`.

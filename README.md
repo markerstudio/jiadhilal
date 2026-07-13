@@ -1,25 +1,33 @@
-# CODING AGENTS: READ THIS FIRST
+# Jiad Hilal — Coaching Platform
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Personal-training platform for **Jiad Hilal** (personal trainer & athlete): a mobile-first
+client app for training, logging workouts, and tracking progress, plus a coach admin panel
+for managing clients, building programs, and sending notes.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+Built with **Vite + React + TypeScript** on the Jiad Hilal design system
+(neon purple `#6200ff` · neon green `#00f700` · neon red `#ff2e5b` · char-black `#232323`,
+Archivo + JetBrains Mono).
 
-## What you should do — IMPORTANT
+## Layout
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+```
+app/        the web app (client app + /admin coach panel)
+vercel.json zero-config Vercel deploy from app/
+```
 
-**Find the primary design file under `project/` and read it top to bottom.** The chat transcripts will tell you which file the user was last iterating on. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+See [`app/README.md`](./app/README.md) for setup, Supabase configuration, and the demo mode.
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+## Quick start
 
-## About the design files
+```bash
+cd app
+npm install
+npm run dev     # http://localhost:5173 — runs in demo mode without any config
+```
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+## Deploy
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
-
-## Bundle contents
-
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Jiad Hilal Design System` project files (HTML prototypes, assets, components)
+Push to `main` — Vercel builds via the root `vercel.json`
+(install/build inside `app/`, output `app/dist`). Add `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` in Vercel → Project → Settings → Environment Variables to run
+against a real Supabase backend; without them the app ships in demo mode.
