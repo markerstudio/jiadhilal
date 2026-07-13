@@ -1,0 +1,10 @@
+/* ============================================================
+   Jiad Hilal — Webfonts
+   The brand manual is logo-only and ships no typography spec.
+   These are Google Fonts substitutions chosen to match the logo:
+     • Archivo        → the heavy oblique geometric "JIAD" wordmark (display + body)
+     • JetBrains Mono → numeric / data display (reps, weights, timers)
+   SUBSTITUTION FLAGGED to the user — swap in licensed brand fonts
+   if/when the original files are supplied.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=JetBrains+Mono:wght@400;500;700&display=swap');

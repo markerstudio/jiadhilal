@@ -1,0 +1,9 @@
+# dependencies / build output (app lives in app/)
+node_modules
+dist
+dist-ssr
+.vercel
+
+# misc
+*.local
+.DS_Store
