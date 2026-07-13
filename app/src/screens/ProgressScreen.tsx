@@ -70,7 +70,7 @@ export function ProgressScreen({ clientId }: { clientId?: string }) {
                 Total volume · {range.toLowerCase()}
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, marginTop: 2 }}>
-                {totalVol.toLocaleString()} <span style={{ fontSize: 15, color: 'var(--purple-300)' }}>lb</span>
+                {totalVol.toLocaleString()} <span style={{ fontSize: 15, color: 'var(--purple-300)' }}>kg</span>
               </div>
             </div>
             <Badge tone={deltaPct >= 0 ? 'green' : 'red'} variant="soft" dot>
@@ -128,7 +128,7 @@ export function ProgressScreen({ clientId }: { clientId?: string }) {
                 <div style={{ fontWeight: 700, fontSize: 14.5 }}>{p.exercise}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>{relativeDay(p.date, today)}</div>
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16, color: 'var(--green-neon)' }}>{p.w} lb</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16, color: 'var(--green-neon)' }}>{p.w} kg</div>
             </div>
           ))}
         </Card>

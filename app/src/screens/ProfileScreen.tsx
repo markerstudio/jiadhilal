@@ -23,7 +23,7 @@ export function ProfileScreen() {
   const rows: [IconName, string, boolean][] = [
     ['bell', 'Workout reminders', true],
     ['moon', 'Rest-day notifications', true],
-    ['ruler', 'Metric units', false],
+    ['ruler', 'Metric units (kg)', true],
   ];
 
   return (

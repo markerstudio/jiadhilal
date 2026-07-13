@@ -5,6 +5,8 @@ import { Button } from '../components/Button';
 import { IconButton } from '../components/IconButton';
 import { Icon } from '../components/Icon';
 import { PageTitle, Loading, DarkField, EmptyState } from '../components/ui';
+import { ExercisePicker } from '../components/ExercisePicker';
+import { exerciseDemoUrl } from '../lib/exerciseLibrary';
 import { store } from '../lib/store';
 import { useAsync } from '../lib/useAsync';
 import type { Program, Workout, ExerciseSpec } from '../lib/types';
@@ -57,7 +59,7 @@ export function AdminProgramEditor() {
     patchWorkout(wi, {
       exercises: [
         ...draft.workouts[wi].exercises,
-        { id: crypto.randomUUID(), name: 'New exercise', sets: [{ w: 45, r: 10 }, { w: 45, r: 10 }, { w: 45, r: 10 }] },
+        { id: crypto.randomUUID(), name: '', sets: [{ w: 20, r: 10 }, { w: 20, r: 10 }, { w: 20, r: 10 }] },
       ],
     });
 
@@ -128,22 +130,22 @@ export function AdminProgramEditor() {
             {w.exercises.map((ex, ei) => (
               <div key={ex.id} style={{ background: 'var(--ink-800)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
+                  <ExercisePicker
                     value={ex.name}
-                    onChange={(e) => patchExercise(wi, ei, { name: e.target.value })}
-                    style={{
-                      flex: 1,
-                      minWidth: 120,
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      color: 'var(--white)',
-                      fontSize: 14.5,
-                      fontWeight: 800,
-                      padding: 0,
-                    }}
-                    aria-label="Exercise name"
+                    autoFocus={ex.name === ''}
+                    onChange={(name) => patchExercise(wi, ei, { name })}
                   />
+                  {ex.name && (
+                    <a
+                      href={exerciseDemoUrl(ex.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Watch demo"
+                      style={{ display: 'inline-flex', color: 'var(--gray-500)' }}
+                    >
+                      <Icon name="external-link" size={15} />
+                    </a>
+                  )}
                   <IconButton
                     aria-label="Delete exercise"
                     variant="ghost"
@@ -197,7 +199,7 @@ export function AdminProgramEditor() {
                     </span>
                   ))}
                   <button
-                    onClick={() => patchExercise(wi, ei, { sets: [...ex.sets, ex.sets.at(-1) ?? { w: 45, r: 10 }] })}
+                    onClick={() => patchExercise(wi, ei, { sets: [...ex.sets, ex.sets.at(-1) ?? { w: 20, r: 10 }] })}
                     style={{
                       background: 'none',
                       border: '1px dashed var(--ink-700)',
@@ -211,6 +213,7 @@ export function AdminProgramEditor() {
                   >
                     + set
                   </button>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-600)', letterSpacing: '0.04em' }}>kg × reps</span>
                 </div>
               </div>
             ))}

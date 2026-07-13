@@ -169,7 +169,7 @@ export function AdminClientDetail() {
                   </div>
                 </div>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13.5, color: 'var(--purple-300)' }}>
-                  {fmtVolume(sessionVolume(s))} lb
+                  {fmtVolume(sessionVolume(s))} kg
                 </span>
               </div>
             ))}
@@ -184,7 +184,7 @@ export function AdminClientDetail() {
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderTop: '1px solid var(--border-dark)' }}>
                 <Icon name="trophy" size={16} color="var(--purple-300)" />
                 <span style={{ flex: 1, fontWeight: 700, fontSize: 14 }}>{p.exercise}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14.5, color: 'var(--green-neon)' }}>{p.w} lb</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14.5, color: 'var(--green-neon)' }}>{p.w} kg</span>
               </div>
             ))}
           </Card>

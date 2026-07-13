@@ -103,7 +103,7 @@ export function TrainScreen() {
                 </div>
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: 'var(--purple-300)' }}>
-                {fmtVolume(sessionVolume(s))} lb
+                {fmtVolume(sessionVolume(s))} kg
               </div>
             </div>
           ))}

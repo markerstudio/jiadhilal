@@ -29,6 +29,7 @@ import {
   Calendar,
   Timer,
   Menu,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 import type { CSSProperties } from 'react';
@@ -65,6 +66,7 @@ const ICONS = {
   calendar: Calendar,
   timer: Timer,
   menu: Menu,
+  'external-link': ExternalLink,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

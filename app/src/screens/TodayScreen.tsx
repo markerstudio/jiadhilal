@@ -105,7 +105,7 @@ export function TodayScreen() {
           <StatTile
             dark
             value={best ? String(best.w) : '—'}
-            unit={best ? 'lb' : undefined}
+            unit={best ? 'kg' : undefined}
             label={best ? best.exercise.split(' ').slice(-2).join(' ') : 'Top set'}
             delta={best ? `×${best.r} reps` : undefined}
             deltaTone="neutral"

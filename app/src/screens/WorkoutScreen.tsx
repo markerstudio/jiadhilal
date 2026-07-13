@@ -11,10 +11,11 @@ import { Loading, EmptyState } from '../components/ui';
 import { useClientData } from '../lib/useClientData';
 import { store } from '../lib/store';
 import { todayISO } from '../lib/derive';
+import { exerciseDemoUrl } from '../lib/exerciseLibrary';
 import type { LoggedSet } from '../lib/types';
 
 const numInput: React.CSSProperties = {
-  width: 52,
+  width: 64,
   background: 'transparent',
   border: 'none',
   outline: 'none',
@@ -128,7 +129,16 @@ export function WorkoutScreen() {
               <Card key={ex.id} variant="dark" padding="16px">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 16 }}>{ex.name}</div>
+                    <a
+                      href={exerciseDemoUrl(ex.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Watch how to perform this exercise"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: 'var(--white)', textDecoration: 'none' }}
+                    >
+                      <span style={{ fontWeight: 800, fontSize: 16 }}>{ex.name}</span>
+                      <Icon name="external-link" size={14} color="var(--purple-300)" />
+                    </a>
                     <div style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600, marginTop: 2 }}>
                       {ex.sets.length} × {ex.sets[0]?.r ?? '—'}
                     </div>
@@ -162,7 +172,7 @@ export function WorkoutScreen() {
                           style={numInput}
                           aria-label="Weight"
                         />
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--purple-300)' }}>lb</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--purple-300)' }}>kg</span>
                       </span>
                       <span style={{ display: 'flex', alignItems: 'baseline', flex: 1 }}>
                         <input
