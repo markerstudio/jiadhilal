@@ -23,17 +23,19 @@ import {
 } from 'firebase/firestore';
 import type { DataStore, Profile, Program, Session, CoachNote } from './types';
 
+/* Firebase web config is public by design (security comes from Firestore rules).
+   Baked-in defaults point at the production project; env vars still override,
+   and VITE_FIREBASE_DISABLED=true forces demo mode. */
 const env = import.meta.env;
 const config = {
-  apiKey: env.VITE_FIREBASE_API_KEY as string | undefined,
-  projectId: env.VITE_FIREBASE_PROJECT_ID as string | undefined,
-  authDomain:
-    (env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined) ??
-    (env.VITE_FIREBASE_PROJECT_ID ? `${env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com` : undefined),
-  appId: env.VITE_FIREBASE_APP_ID as string | undefined,
+  apiKey: (env.VITE_FIREBASE_API_KEY as string | undefined) ?? 'AIzaSyCN1Y8OAgQs-Lv8YXBEoKGAgzxiJMQVgtU',
+  projectId: (env.VITE_FIREBASE_PROJECT_ID as string | undefined) ?? 'jiadhilal-coaching',
+  authDomain: (env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined) ?? 'jiadhilal-coaching.firebaseapp.com',
+  appId: (env.VITE_FIREBASE_APP_ID as string | undefined) ?? '1:259493260195:web:6f4c81f6a31ae587078816',
 };
 
-export const isFirebaseConfigured = Boolean(config.apiKey && config.projectId);
+export const isFirebaseConfigured =
+  env.VITE_FIREBASE_DISABLED !== 'true' && Boolean(config.apiKey && config.projectId);
 
 let app: FirebaseApp | null = null;
 function firebase(): FirebaseApp {
