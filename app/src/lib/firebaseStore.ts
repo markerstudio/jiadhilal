@@ -1,0 +1,160 @@
+/* Firebase-backed DataStore (Auth + Firestore). Active when the VITE_FIREBASE_* env
+   vars are set. Data model — one document per entity, workouts embedded in programs:
+     profiles/{uid}        { name, email, role, goal? }
+     programs/{id}         { name, description, daysPerWeek, workouts: Workout[] }
+     assignments/{clientId}{ programId, startDate }
+     sessions/{id}         { clientId, workoutId, workoutName, date, durationMin, exercises }
+     notes/{id}            { clientId, body, createdAt }
+   Security rules: ../../firebase/firestore.rules */
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  type Firestore,
+} from 'firebase/firestore';
+import type { DataStore, Profile, Program, Session, CoachNote } from './types';
+
+const env = import.meta.env;
+const config = {
+  apiKey: env.VITE_FIREBASE_API_KEY as string | undefined,
+  projectId: env.VITE_FIREBASE_PROJECT_ID as string | undefined,
+  authDomain:
+    (env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined) ??
+    (env.VITE_FIREBASE_PROJECT_ID ? `${env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com` : undefined),
+  appId: env.VITE_FIREBASE_APP_ID as string | undefined,
+};
+
+export const isFirebaseConfigured = Boolean(config.apiKey && config.projectId);
+
+let app: FirebaseApp | null = null;
+function firebase(): FirebaseApp {
+  if (!app) {
+    if (!isFirebaseConfigured) throw new Error('Firebase is not configured');
+    app = initializeApp(config);
+  }
+  return app;
+}
+export const firebaseAuth = (): Auth => getAuth(firebase());
+const db = (): Firestore => getFirestore(firebase());
+
+/* ---- mappers (doc data + id → domain types) ---- */
+const toProfile = (id: string, d: any): Profile => ({
+  id,
+  name: d.name,
+  email: d.email,
+  role: d.role,
+  goal: d.goal ?? undefined,
+});
+
+const toProgram = (id: string, d: any): Program => ({
+  id,
+  name: d.name,
+  description: d.description ?? '',
+  daysPerWeek: d.daysPerWeek ?? 4,
+  workouts: (d.workouts ?? []).slice().sort((a: any, b: any) => a.order - b.order),
+});
+
+const toSession = (id: string, d: any): Session => ({
+  id,
+  clientId: d.clientId,
+  workoutId: d.workoutId,
+  workoutName: d.workoutName,
+  date: d.date,
+  durationMin: d.durationMin ?? 0,
+  exercises: d.exercises ?? [],
+});
+
+const toNote = (id: string, d: any): CoachNote => ({
+  id,
+  clientId: d.clientId,
+  body: d.body,
+  createdAt: d.createdAt,
+});
+
+/** Create the profile doc on first sign-in (no server triggers on the free plan). */
+export async function ensureProfile(uid: string, email: string): Promise<Profile> {
+  const ref = doc(db(), 'profiles', uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) return toProfile(uid, snap.data());
+  const fresh = { name: email.split('@')[0], email, role: 'client' as const };
+  await setDoc(ref, fresh);
+  return { id: uid, ...fresh };
+}
+
+export const firebaseStore: DataStore = {
+  async getProfile(id) {
+    const snap = await getDoc(doc(db(), 'profiles', id));
+    return snap.exists() ? toProfile(id, snap.data()) : null;
+  },
+  async listClients() {
+    const snap = await getDocs(query(collection(db(), 'profiles'), where('role', '==', 'client')));
+    return snap.docs.map((d) => toProfile(d.id, d.data())).sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  async listPrograms() {
+    const snap = await getDocs(collection(db(), 'programs'));
+    return snap.docs.map((d) => toProgram(d.id, d.data())).sort((a, b) => a.name.localeCompare(b.name));
+  },
+  async getProgram(id) {
+    const snap = await getDoc(doc(db(), 'programs', id));
+    return snap.exists() ? toProgram(id, snap.data()) : null;
+  },
+  async saveProgram(p) {
+    await setDoc(doc(db(), 'programs', p.id), {
+      name: p.name,
+      description: p.description,
+      daysPerWeek: p.daysPerWeek,
+      workouts: p.workouts,
+    });
+  },
+  async deleteProgram(id) {
+    await deleteDoc(doc(db(), 'programs', id));
+    const stale = await getDocs(query(collection(db(), 'assignments'), where('programId', '==', id)));
+    await Promise.all(stale.docs.map((d) => deleteDoc(d.ref)));
+  },
+
+  async getAssignment(clientId) {
+    const snap = await getDoc(doc(db(), 'assignments', clientId));
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    return { clientId, programId: d.programId, startDate: d.startDate };
+  },
+  async assignProgram(clientId, programId) {
+    await setDoc(doc(db(), 'assignments', clientId), {
+      programId,
+      startDate: new Date().toISOString().slice(0, 10),
+    });
+  },
+
+  async listSessions(clientId) {
+    const snap = await getDocs(query(collection(db(), 'sessions'), where('clientId', '==', clientId)));
+    return snap.docs.map((d) => toSession(d.id, d.data())).sort((a, b) => a.date.localeCompare(b.date));
+  },
+  async listAllSessions() {
+    const snap = await getDocs(collection(db(), 'sessions'));
+    return snap.docs.map((d) => toSession(d.id, d.data())).sort((a, b) => a.date.localeCompare(b.date));
+  },
+  async addSession(s) {
+    const ref = await addDoc(collection(db(), 'sessions'), s);
+    return { ...s, id: ref.id };
+  },
+
+  async listNotes(clientId) {
+    const snap = await getDocs(query(collection(db(), 'notes'), where('clientId', '==', clientId)));
+    return snap.docs.map((d) => toNote(d.id, d.data())).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async addNote(n) {
+    const data = { ...n, createdAt: new Date().toISOString() };
+    const ref = await addDoc(collection(db(), 'notes'), data);
+    return { ...data, id: ref.id };
+  },
+};

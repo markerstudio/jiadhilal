@@ -1,8 +1,9 @@
-/* Auth context — Supabase email/password when configured, demo quick-login otherwise. */
+/* Auth context — Firebase email/password when configured, demo quick-login otherwise. */
 import React from 'react';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut as fbSignOut } from 'firebase/auth';
 import type { Profile } from './types';
 import { demoMode, store } from './store';
-import { supabase } from './supabaseStore';
+import { firebaseAuth, ensureProfile } from './firebaseStore';
 import { DEMO_COACH, DEMO_CLIENTS } from './demoData';
 
 interface AuthValue {
@@ -27,17 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       else setLoading(false);
       return;
     }
-    const sb = supabase();
-    sb.auth.getSession().then(async ({ data }) => {
-      const uid = data.session?.user.id;
-      if (uid) setUser(await store.getProfile(uid));
+    // Firebase: react to auth state; bootstrap the profile doc on first sign-in.
+    const unsub = onAuthStateChanged(firebaseAuth(), async (fbUser) => {
+      if (fbUser) setUser(await ensureProfile(fbUser.uid, fbUser.email ?? ''));
+      else setUser(null);
       setLoading(false);
     });
-    const { data: sub } = sb.auth.onAuthStateChange(async (_event, session) => {
-      const uid = session?.user.id;
-      setUser(uid ? await store.getProfile(uid) : null);
-    });
-    return () => sub.subscription.unsubscribe();
+    return unsub;
   }, []);
 
   const signIn = React.useCallback(async (email: string, password: string) => {
@@ -51,14 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(match);
       return;
     }
-    const { data, error } = await supabase().auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    setUser(await store.getProfile(data.user.id));
+    const cred = await signInWithEmailAndPassword(firebaseAuth(), email, password);
+    setUser(await ensureProfile(cred.user.uid, cred.user.email ?? email));
   }, []);
 
   const signOut = React.useCallback(async () => {
-    if (demoMode) localStorage.removeItem(DEMO_KEY);
-    else await supabase().auth.signOut();
+    if (demoMode) {
+      localStorage.removeItem(DEMO_KEY);
+    } else {
+      await fbSignOut(firebaseAuth());
+    }
     setUser(null);
   }, []);
 

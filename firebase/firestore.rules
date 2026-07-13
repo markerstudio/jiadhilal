@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// Jiad Hilal Coaching Platform — Firestore security rules.
+// Paste into Firebase Console → Firestore Database → Rules → Publish.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isCoach() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'coach';
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // profiles/{uid} — users bootstrap their own profile on first sign-in,
+    // always as role 'client'. Promote a coach by editing the doc in the console.
+    match /profiles/{uid} {
+      allow read: if isSelf(uid) || isCoach();
+      allow create: if isSelf(uid) && request.resource.data.role == 'client';
+      allow update: if isCoach()
+        || (isSelf(uid) && request.resource.data.role == resource.data.role);
+      allow delete: if isCoach();
+    }
+
+    // programs — any signed-in user can read; only the coach writes
+    match /programs/{id} {
+      allow read: if signedIn();
+      allow write: if isCoach();
+    }
+
+    // assignments/{clientId} — client reads own; coach reads/writes all
+    match /assignments/{clientId} {
+      allow read: if isSelf(clientId) || isCoach();
+      allow write: if isCoach();
+    }
+
+    // sessions — client reads/creates own; coach reads all
+    match /sessions/{id} {
+      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.clientId == request.auth.uid;
+      allow update, delete: if isCoach();
+    }
+
+    // notes — client reads own; only the coach writes
+    match /notes/{id} {
+      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow write: if isCoach();
+    }
+  }
+}

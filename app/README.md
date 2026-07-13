@@ -20,29 +20,34 @@ npm run dev      # http://localhost:5173
 
 Other scripts: `npm run build` (typecheck + production build), `npm run typecheck`, `npm run preview`.
 
-## Demo mode vs Supabase
+## Demo mode vs Firebase
 
 The app picks its backend at build time:
 
 - **No env vars → demo mode.** Data lives in localStorage, seeded with a coach
   (Jiad), three clients, a program, and ~6 weeks of session history. The login screen
   shows one-tap **Demo: client** / **Demo: coach** buttons; any password works.
-- **Env vars set → Supabase.** Real auth (email/password) and Postgres with row-level
-  security.
+- **Env vars set → Firebase.** Real auth (email/password) and Firestore with security
+  rules. The free **Spark** plan is plenty — no credit card required.
 
-### Wiring up Supabase
+### Wiring up Firebase
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Run [`../supabase/schema.sql`](../supabase/schema.sql) in the SQL editor
-   (tables, RLS policies, signup trigger), then optionally
-   [`../supabase/seed.sql`](../supabase/seed.sql) for a starter program.
-3. Create users (Dashboard → Authentication → Add user). Each signup auto-creates a
-   `profiles` row. Promote the coach:
-   `update public.profiles set role = 'coach' where email = '…';`
-4. Copy `.env.example` → `.env` and fill in
-   `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
-   (Dashboard → Project Settings → API). For production, add the same two vars in
-   **Vercel → Project → Settings → Environment Variables** and redeploy.
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+   (Spark plan; you can skip Google Analytics).
+2. **Authentication** → Get started → Sign-in method → enable **Email/Password**.
+   Then **Users → Add user** for the coach and each client.
+3. **Firestore Database** → Create database (production mode) → **Rules** tab →
+   paste [`../firebase/firestore.rules`](../firebase/firestore.rules) → Publish.
+4. **Project settings → General → Your apps** → add a **Web app** (</>) — no hosting
+   needed. Copy the config values into `.env` (see `.env.example`):
+   `VITE_FIREBASE_API_KEY` + `VITE_FIREBASE_PROJECT_ID` (auth domain and app id optional).
+   For production, add the same vars in **Vercel → Project → Settings →
+   Environment Variables** and redeploy.
+5. Each user's profile document is created automatically the first time they sign in
+   (role `client`). Promote yourself to coach: **Firestore → `profiles` → your doc →
+   edit `role` → `coach`**.
+6. Sign in as the coach and build your first program in **/admin → Programs** —
+   no SQL seeding needed; the builder writes straight to Firestore.
 
 ## Structure
 
@@ -59,7 +64,7 @@ src/
     types.ts             domain types + DataStore interface
     derive.ts            pure stats derivations (streaks, volume, PRs, next workout)
     demoStore.ts/demoData.ts   localStorage store + seed (demo mode)
-    supabaseStore.ts     Supabase implementation of DataStore
+    firebaseStore.ts     Firebase Auth + Firestore implementation of DataStore
     store.ts             picks the active store from env
     AuthContext.tsx      auth for both modes
 ```

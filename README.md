@@ -28,6 +28,6 @@ npm run dev     # http://localhost:5173 — runs in demo mode without any config
 ## Deploy
 
 Push to `main` — Vercel builds via the root `vercel.json`
-(install/build inside `app/`, output `app/dist`). Add `VITE_SUPABASE_URL` and
-`VITE_SUPABASE_ANON_KEY` in Vercel → Project → Settings → Environment Variables to run
-against a real Supabase backend; without them the app ships in demo mode.
+(install/build inside `app/`, output `app/dist`). Add `VITE_FIREBASE_API_KEY` and
+`VITE_FIREBASE_PROJECT_ID` in Vercel → Project → Settings → Environment Variables to run
+against a real Firebase backend (free Spark plan); without them the app ships in demo mode.
