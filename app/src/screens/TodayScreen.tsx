@@ -11,6 +11,7 @@ import { Overline, displayStyle, Loading, EmptyState } from '../components/ui';
 import { useAuth } from '../lib/AuthContext';
 import { useClientData } from '../lib/useClientData';
 import { store } from '../lib/store';
+import { CheckInCard } from '../components/CheckInCard';
 import { MACRO_COLORS, dayTotal, fmtMacro, mealsForDay } from '../lib/nutrition';
 import type { NutritionLog, NutritionPlan } from '../lib/types';
 import {
@@ -152,6 +153,9 @@ export function TodayScreen() {
             </Card>
           );
         })()}
+
+        {/* daily check-in */}
+        <CheckInCard />
 
         {/* stats grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

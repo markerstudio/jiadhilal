@@ -67,5 +67,19 @@ service cloud.firestore {
         || (signedIn() && request.resource.data.clientId == request.auth.uid);
       allow delete: if isCoach();
     }
+
+    // checkins/{clientId_date} — client logs own daily numbers; coach reads all
+    match /checkins/{id} {
+      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow create, update: if isCoach()
+        || (signedIn() && request.resource.data.clientId == request.auth.uid);
+      allow delete: if isCoach();
+    }
+
+    // wellnessTargets/{clientId} — client reads own; only the coach writes
+    match /wellnessTargets/{clientId} {
+      allow read: if isSelf(clientId) || isCoach();
+      allow write: if isCoach();
+    }
   }
 }

@@ -1,6 +1,6 @@
 /* Demo-mode DataStore — localStorage-persisted, seeded on first run.
    Lets the whole app (client + admin) work with zero backend config. */
-import type { DataStore, Profile, Program, Assignment, Session, CoachNote, NutritionPlan, NutritionLog } from './types';
+import type { DataStore, Profile, Program, Assignment, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn, WellnessTargets } from './types';
 import { DEMO_COACH, DEMO_CLIENTS, DEMO_PROGRAM, DEMO_ASSIGNMENTS, DEMO_SESSIONS, DEMO_NOTES } from './demoData';
 
 const KEY = 'jh_demo_db_v1';
@@ -13,6 +13,8 @@ interface DB {
   notes: CoachNote[];
   nutritionPlans: NutritionPlan[];
   nutritionLogs: NutritionLog[];
+  checkIns: CheckIn[];
+  wellnessTargets: WellnessTargets[];
 }
 
 function seed(): DB {
@@ -24,6 +26,8 @@ function seed(): DB {
     notes: DEMO_NOTES,
     nutritionPlans: [],
     nutritionLogs: [],
+    checkIns: [],
+    wellnessTargets: [],
   };
 }
 
@@ -32,9 +36,11 @@ function load(): DB {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const db = JSON.parse(raw) as DB;
-      // migrate DBs persisted before nutrition existed
+      // migrate DBs persisted before nutrition / check-ins existed
       db.nutritionPlans ??= [];
       db.nutritionLogs ??= [];
+      db.checkIns ??= [];
+      db.wellnessTargets ??= [];
       return db;
     }
   } catch {
@@ -140,6 +146,32 @@ export const demoStore: DataStore = {
     return load()
       .nutritionLogs.filter((l) => l.clientId === clientId)
       .sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  async getCheckIn(clientId, date) {
+    return load().checkIns.find((c) => c.clientId === clientId && c.date === date) ?? null;
+  },
+  async saveCheckIn(c) {
+    const db = load();
+    const i = db.checkIns.findIndex((x) => x.clientId === c.clientId && x.date === c.date);
+    if (i >= 0) db.checkIns[i] = c;
+    else db.checkIns.push(c);
+    save(db);
+  },
+  async listCheckIns(clientId) {
+    return load()
+      .checkIns.filter((c) => c.clientId === clientId)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  },
+  async getWellnessTargets(clientId) {
+    return load().wellnessTargets.find((t) => t.clientId === clientId) ?? null;
+  },
+  async saveWellnessTargets(t) {
+    const db = load();
+    const i = db.wellnessTargets.findIndex((x) => x.clientId === t.clientId);
+    if (i >= 0) db.wellnessTargets[i] = t;
+    else db.wellnessTargets.push(t);
+    save(db);
   },
 };
 

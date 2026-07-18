@@ -5,7 +5,7 @@ Two surfaces in one deploy:
 
 - **Client app** (`/`) — Today dashboard, Train (program + history), active workout with
   set logging, Nutrition (daily meal plan with training/rest-day macro targets, per-food
-  macros, meal + day completion), Progress (volume chart, PRs), Profile. Bottom tab bar
+  macros, meal + day completion), daily check-in (weight, steps, sleep, resting HR vs coach targets), Progress (volume chart, body-weight trend, PRs), Profile. Bottom tab bar
   on mobile; left rail + centered column on desktop (≥900px).
 - **Coach admin** (`/admin`, coach role only) — analytics dashboard, client roster +
   client detail (progress, sessions, PRs, program assignment), program builder
