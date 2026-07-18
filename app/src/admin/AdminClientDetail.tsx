@@ -12,6 +12,7 @@ import { store } from '../lib/store';
 import { useAsync } from '../lib/useAsync';
 import {
   todayISO,
+  addDays,
   sessionsInWeek,
   dayStreak,
   weeklyVolume,
@@ -21,6 +22,7 @@ import {
   sessionVolume,
   fmtVolume,
 } from '../lib/derive';
+import { dayTotal, mealsForDay } from '../lib/nutrition';
 
 /* Client detail — progress, sessions, PRs, program assignment, coach notes. */
 export function AdminClientDetail() {
@@ -30,18 +32,20 @@ export function AdminClientDetail() {
   const [sending, setSending] = React.useState(false);
 
   const { value, loading, reload } = useAsync(async () => {
-    const [client, sessions, notes, assignment, programs] = await Promise.all([
+    const [client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs] = await Promise.all([
       store.getProfile(clientId!),
       store.listSessions(clientId!),
       store.listNotes(clientId!),
       store.getAssignment(clientId!),
       store.listPrograms(),
+      store.getNutritionPlan(clientId!),
+      store.listNutritionLogs(clientId!),
     ]);
-    return { client, sessions, notes, assignment, programs };
+    return { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs };
   }, [clientId]);
 
   if (loading || !value) return <Loading />;
-  const { client, sessions, notes, assignment, programs } = value;
+  const { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs } = value;
   if (!client) return <EmptyState title="Client not found" />;
 
   const today = todayISO();
@@ -122,6 +126,14 @@ export function AdminClientDetail() {
             ))}
           </select>
         </label>
+        <Button
+          variant="secondary"
+          size="sm"
+          iconLeft={<Icon name="apple" size={16} />}
+          onClick={() => navigate(`/admin/clients/${client.id}/nutrition`)}
+        >
+          Nutrition plan
+        </Button>
       </div>
 
       {/* stats */}
@@ -173,6 +185,46 @@ export function AdminClientDetail() {
                 </span>
               </div>
             ))}
+          </Card>
+
+          {/* nutrition adherence — last 7 days */}
+          <Card variant="dark" padding="0">
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px 8px' }}>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gray-400)' }}>
+                Nutrition · last 7 days
+              </span>
+              <button
+                onClick={() => navigate(`/admin/clients/${client.id}/nutrition`)}
+                style={{ background: 'none', border: 'none', color: 'var(--purple-300)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', padding: 0 }}
+              >
+                Edit plan
+              </button>
+            </div>
+            {!nutritionPlan && <EmptyState title="No plan yet" hint="Build one with Edit plan — the default template loads to start from." />}
+            {nutritionPlan &&
+              Array.from({ length: 7 }, (_, i) => addDays(today, -i)).map((date) => {
+                const log = nutritionLogs.find((l) => l.date === date) ?? null;
+                const day = nutritionPlan.days[log?.dayType ?? 'training'];
+                const meals = mealsForDay(day, log);
+                const mealsDone = meals.filter((m) => log?.completedMeals.includes(m.id)).length;
+                const planned = dayTotal(day, log);
+                return (
+                  <div key={date} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderTop: '1px solid var(--border-dark)' }}>
+                    <span style={{ width: 84, fontSize: 12.5, fontWeight: 700, color: 'var(--gray-300)' }}>{relativeDay(date, today)}</span>
+                    <Badge tone={log?.dayType === 'rest' ? 'neutral' : 'purple'} variant="soft" size="sm">
+                      {log?.dayType === 'rest' ? 'Rest' : 'Train'}
+                    </Badge>
+                    <span style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 700, color: mealsDone === meals.length && meals.length > 0 ? 'var(--green-neon)' : 'var(--gray-400)', textAlign: 'right' }}>
+                      {mealsDone}/{meals.length} meals · {Math.round(planned.kcal)} kcal
+                    </span>
+                    {log?.dayCompleted ? (
+                      <Icon name="check" size={16} color="var(--green-neon)" />
+                    ) : (
+                      <span style={{ width: 16 }} />
+                    )}
+                  </div>
+                );
+              })}
           </Card>
 
           <Card variant="dark" padding="0">

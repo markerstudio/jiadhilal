@@ -148,4 +148,5 @@ export interface DataStore {
   saveNutritionPlan(p: NutritionPlan): Promise<void>;
   getNutritionLog(clientId: string, date: string): Promise<NutritionLog | null>;
   saveNutritionLog(log: NutritionLog): Promise<void>;
+  listNutritionLogs(clientId: string): Promise<NutritionLog[]>;
 }

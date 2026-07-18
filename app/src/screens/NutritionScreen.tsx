@@ -4,7 +4,9 @@ import { Icon } from '../components/Icon';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { MacroRings } from '../components/MacroRings';
-import { Overline, displayStyle, Loading, EmptyState, DarkField } from '../components/ui';
+import { FoodEntryForm } from '../components/FoodEntryForm';
+import { Overline, displayStyle, Loading, EmptyState } from '../components/ui';
+import { foodVideoUrl } from '../lib/foodLibrary';
 import { useAuth } from '../lib/AuthContext';
 import { store } from '../lib/store';
 import { addDays, todayISO, relativeDay } from '../lib/derive';
@@ -398,6 +400,15 @@ function MealCard({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                    <a
+                      href={foodVideoUrl(f.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Watch ${f.name} recipe video`}
+                      style={{ display: 'flex', color: 'var(--gray-500)' }}
+                    >
+                      <Icon name="external-link" size={12} />
+                    </a>
                     {extraIds.has(f.id) && (
                       <button
                         onClick={() => onRemoveExtra(f.id)}
@@ -423,7 +434,7 @@ function MealCard({
           </div>
 
           {adding ? (
-            <AddFoodForm onAdd={onAddFood} onCancel={onCancelAdd} />
+            <FoodEntryForm onAdd={onAddFood} onCancel={onCancelAdd} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12 }}>
               <TextAction onClick={onStartAdd}>+ Add food</TextAction>
@@ -455,51 +466,3 @@ function TextAction({ children, onClick, color = 'var(--purple-300)' }: { childr
   );
 }
 
-function AddFoodForm({ onAdd, onCancel }: { onAdd: (f: FoodItem) => void; onCancel: () => void }) {
-  const [name, setName] = React.useState('');
-  const [portion, setPortion] = React.useState('100 g');
-  const [kcal, setKcal] = React.useState('');
-  const [protein, setProtein] = React.useState('');
-  const [carbs, setCarbs] = React.useState('');
-  const [fat, setFat] = React.useState('');
-
-  const num = (s: string) => Math.max(0, Number(s) || 0);
-  const valid = name.trim().length > 0 && kcal.trim().length > 0;
-
-  return (
-    <div style={{ marginTop: 12, padding: 12, background: 'var(--ink-950)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
-        <DarkField label="Food" value={name} onChange={setName} placeholder="Chicken breast" />
-        <DarkField label="Portion" value={portion} onChange={setPortion} placeholder="100 g" />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-        <DarkField label="Kcal" value={kcal} onChange={setKcal} type="number" mono />
-        <DarkField label="P (g)" value={protein} onChange={setProtein} type="number" mono />
-        <DarkField label="C (g)" value={carbs} onChange={setCarbs} type="number" mono />
-        <DarkField label="F (g)" value={fat} onChange={setFat} type="number" mono />
-      </div>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-        <Button variant="ghost" size="sm" onClick={onCancel} style={{ color: 'var(--gray-400)' }}>
-          Cancel
-        </Button>
-        <Button
-          size="sm"
-          disabled={!valid}
-          onClick={() =>
-            onAdd({
-              id: foodId(),
-              name: name.trim(),
-              portion: portion.trim() || '1 serving',
-              kcal: num(kcal),
-              protein: num(protein),
-              carbs: num(carbs),
-              fat: num(fat),
-            })
-          }
-        >
-          Add food
-        </Button>
-      </div>
-    </div>
-  );
-}
