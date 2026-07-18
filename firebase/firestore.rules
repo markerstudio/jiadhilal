@@ -60,9 +60,11 @@ service cloud.firestore {
       allow read, write: if isSelf(clientId) || isCoach();
     }
 
-    // nutritionLogs/{clientId_date} — client tracks own days; coach reads all
+    // nutritionLogs/{clientId_date} — client tracks own days; coach reads all.
+    // Read checks the doc ID (not resource.data) so reads of not-yet-created
+    // days succeed — resource is null for missing docs and would deny the get.
     match /nutritionLogs/{id} {
-      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow read: if isCoach() || (signedIn() && id.split('_')[0] == request.auth.uid);
       allow create, update: if isCoach()
         || (signedIn() && request.resource.data.clientId == request.auth.uid);
       allow delete: if isCoach();
@@ -70,7 +72,7 @@ service cloud.firestore {
 
     // checkins/{clientId_date} — client logs own daily numbers; coach reads all
     match /checkins/{id} {
-      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow read: if isCoach() || (signedIn() && id.split('_')[0] == request.auth.uid);
       allow create, update: if isCoach()
         || (signedIn() && request.resource.data.clientId == request.auth.uid);
       allow delete: if isCoach();

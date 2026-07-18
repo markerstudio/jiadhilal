@@ -25,7 +25,13 @@ export function CheckInCard() {
     if (!user) return;
     let alive = true;
     void (async () => {
-      const [c, t] = await Promise.all([store.getCheckIn(user.id, today), store.getWellnessTargets(user.id)]);
+      let c: CheckIn | null = null;
+      let t: WellnessTargets | null = null;
+      try {
+        [c, t] = await Promise.all([store.getCheckIn(user.id, today), store.getWellnessTargets(user.id)]);
+      } catch (e) {
+        console.error('check-in load failed', e);
+      }
       if (!alive) return;
       setCheckIn(c);
       setTargets(t);

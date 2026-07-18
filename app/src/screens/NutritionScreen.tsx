@@ -42,15 +42,24 @@ export function NutritionScreen() {
   const [addingFoodTo, setAddingFoodTo] = React.useState<string | null>(null);
   const [expanded, setExpanded] = React.useState<string[]>([]); // completed meals peeked open
 
-  // load (and first-time seed) the plan
+  // load (and first-time seed) the plan — never hang on a failed read
   React.useEffect(() => {
     if (!user) return;
     let alive = true;
     void (async () => {
-      let p = await store.getNutritionPlan(user.id);
+      let p: NutritionPlan | null = null;
+      try {
+        p = await store.getNutritionPlan(user.id);
+      } catch (e) {
+        console.error('nutrition plan load failed', e);
+      }
       if (!p) {
         p = defaultNutritionPlan(user.id);
-        await store.saveNutritionPlan(p);
+        try {
+          await store.saveNutritionPlan(p);
+        } catch (e) {
+          console.error('nutrition plan seed failed', e);
+        }
       }
       if (alive) setPlan(p);
     })();
@@ -59,13 +68,18 @@ export function NutritionScreen() {
     };
   }, [user]);
 
-  // load the log whenever the date changes
+  // load the log whenever the date changes — never hang on a failed read
   React.useEffect(() => {
     if (!user) return;
     let alive = true;
     setLoading(true);
     void (async () => {
-      const l = await store.getNutritionLog(user.id, date);
+      let l: NutritionLog | null = null;
+      try {
+        l = await store.getNutritionLog(user.id, date);
+      } catch (e) {
+        console.error('nutrition log load failed', e);
+      }
       if (!alive) return;
       setLog(l ?? emptyLog(user.id, date));
       setExpanded([]);
