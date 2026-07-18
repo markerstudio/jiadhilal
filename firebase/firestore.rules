@@ -81,5 +81,11 @@ service cloud.firestore {
       allow read: if isSelf(clientId) || isCoach();
       allow write: if isCoach();
     }
+
+    // ingestTokens/{clientId} — secret for the Apple Health sync shortcut.
+    // Client manages own token; the api/checkin endpoint reads via service account.
+    match /ingestTokens/{clientId} {
+      allow read, write: if isSelf(clientId) || isCoach();
+    }
   }
 }
