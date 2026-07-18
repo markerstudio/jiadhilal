@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { StatTile } from '../components/StatTile';
@@ -9,6 +10,9 @@ import { Icon } from '../components/Icon';
 import { Overline, displayStyle, Loading, EmptyState } from '../components/ui';
 import { useAuth } from '../lib/AuthContext';
 import { useClientData } from '../lib/useClientData';
+import { store } from '../lib/store';
+import { MACRO_COLORS, dayTotal, fmtMacro, mealsForDay } from '../lib/nutrition';
+import type { NutritionLog, NutritionPlan } from '../lib/types';
 import {
   todayISO,
   programWeek,
@@ -25,6 +29,21 @@ export function TodayScreen() {
   const { user } = useAuth();
   const { data, loading } = useClientData();
   const navigate = useNavigate();
+  const [nutrition, setNutrition] = React.useState<{ plan: NutritionPlan; log: NutritionLog | null } | null>(null);
+
+  React.useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    void (async () => {
+      const plan = await store.getNutritionPlan(user.id);
+      if (!plan) return; // seeded on first Nutrition visit
+      const log = await store.getNutritionLog(user.id, todayISO());
+      if (alive) setNutrition({ plan, log });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
 
   if (loading || !data || !user) return <Loading />;
 
@@ -91,6 +110,48 @@ export function TodayScreen() {
             <div style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>sessions done</div>
           </div>
         </Card>
+
+        {/* nutrition today */}
+        {(() => {
+          if (!nutrition) {
+            return (
+              <Card variant="dark" padding="16px" interactive onClick={() => navigate('/nutrition')} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Icon name="apple" size={22} color="var(--purple-300)" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>Nutrition</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--gray-400)', fontWeight: 600, marginTop: 2 }}>Open your meal plan for today</div>
+                </div>
+                <Icon name="chevron-right" size={18} color="var(--gray-500)" />
+              </Card>
+            );
+          }
+          const { plan, log } = nutrition;
+          const day = plan.days[log?.dayType ?? 'training'];
+          const meals = mealsForDay(day, log);
+          const mealsDone = meals.filter((m) => log?.completedMeals.includes(m.id)).length;
+          const planned = dayTotal(day, log);
+          return (
+            <Card variant="dark" padding="16px" interactive onClick={() => navigate('/nutrition')} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <ProgressRing value={meals.length ? (mealsDone / meals.length) * 100 : 0} size={56} stroke={7} tone={log?.dayCompleted ? 'green' : 'brand'} dark label={`${mealsDone}/${meals.length}`} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  Nutrition
+                  {log?.dayCompleted && (
+                    <Badge tone="green" variant="soft" size="sm" dot>
+                      Day complete
+                    </Badge>
+                  )}
+                </div>
+                <div style={{ fontSize: 12.5, color: 'var(--gray-400)', fontWeight: 600, marginTop: 3 }}>
+                  meals done · {(log?.dayType ?? 'training') === 'training' ? 'training day' : 'rest day'} ·{' '}
+                  <span style={{ fontFamily: 'var(--font-mono)', color: MACRO_COLORS.kcal }}>{fmtMacro('kcal', planned.kcal)}</span>
+                  <span> / {fmtMacro('kcal', day.targets.kcal)} kcal</span>
+                </div>
+              </div>
+              <Icon name="chevron-right" size={18} color="var(--gray-500)" />
+            </Card>
+          );
+        })()}
 
         {/* stats grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

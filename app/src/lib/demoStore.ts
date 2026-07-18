@@ -136,6 +136,11 @@ export const demoStore: DataStore = {
     else db.nutritionLogs.push(log);
     save(db);
   },
+  async listNutritionLogs(clientId) {
+    return load()
+      .nutritionLogs.filter((l) => l.clientId === clientId)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  },
 };
 
 /** Reset demo data (useful from the profile screen / console). */

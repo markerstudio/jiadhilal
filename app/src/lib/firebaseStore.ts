@@ -192,4 +192,8 @@ export const firebaseStore: DataStore = {
   async saveNutritionLog(log) {
     await setDoc(doc(db(), 'nutritionLogs', `${log.clientId}_${log.date}`), log);
   },
+  async listNutritionLogs(clientId) {
+    const snap = await getDocs(query(collection(db(), 'nutritionLogs'), where('clientId', '==', clientId)));
+    return snap.docs.map((d) => toNutritionLog(d.data())).sort((a, b) => b.date.localeCompare(a.date));
+  },
 };
