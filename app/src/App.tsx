@@ -9,6 +9,7 @@ import { TodayScreen } from './screens/TodayScreen';
 import { TrainScreen } from './screens/TrainScreen';
 import { NutritionScreen } from './screens/NutritionScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
+import { ChatScreen } from './screens/ChatScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { AdminDashboard } from './admin/AdminDashboard';
@@ -59,6 +60,14 @@ export function App() {
             element={
               <Gate>
                 <WorkoutScreen />
+              </Gate>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <Gate>
+                <ChatScreen />
               </Gate>
             }
           />

@@ -1,6 +1,6 @@
 /* Demo-mode DataStore — localStorage-persisted, seeded on first run.
    Lets the whole app (client + admin) work with zero backend config. */
-import type { DataStore, Profile, Program, Assignment, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn, WellnessTargets } from './types';
+import type { DataStore, Profile, Program, Assignment, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn, WellnessTargets, ProgressPhoto, ChatMessage } from './types';
 import { DEMO_COACH, DEMO_CLIENTS, DEMO_PROGRAM, DEMO_ASSIGNMENTS, DEMO_SESSIONS, DEMO_NOTES } from './demoData';
 
 const KEY = 'jh_demo_db_v1';
@@ -16,6 +16,8 @@ interface DB {
   checkIns: CheckIn[];
   wellnessTargets: WellnessTargets[];
   ingestTokens: { clientId: string; token: string }[];
+  photos: ProgressPhoto[];
+  messages: ChatMessage[];
 }
 
 function seed(): DB {
@@ -30,6 +32,8 @@ function seed(): DB {
     checkIns: [],
     wellnessTargets: [],
     ingestTokens: [],
+    photos: [],
+    messages: [],
   };
 }
 
@@ -44,6 +48,8 @@ function load(): DB {
       db.checkIns ??= [];
       db.wellnessTargets ??= [];
       db.ingestTokens ??= [];
+      db.photos ??= [];
+      db.messages ??= [];
       return db;
     }
   } catch {
@@ -186,6 +192,37 @@ export const demoStore: DataStore = {
     if (i >= 0) db.ingestTokens[i] = { clientId, token };
     else db.ingestTokens.push({ clientId, token });
     save(db);
+  },
+
+  async listPhotos(clientId) {
+    return load()
+      .photos.filter((p) => p.clientId === clientId)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+  async addPhoto(p) {
+    const db = load();
+    const photo: ProgressPhoto = { ...p, id: uid(), createdAt: new Date().toISOString() };
+    db.photos.push(photo);
+    save(db);
+    return photo;
+  },
+  async deletePhoto(id) {
+    const db = load();
+    db.photos = db.photos.filter((p) => p.id !== id);
+    save(db);
+  },
+
+  async listMessages(clientId) {
+    return load()
+      .messages.filter((m) => m.clientId === clientId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+  async sendMessage(m) {
+    const db = load();
+    const msg: ChatMessage = { ...m, id: uid(), createdAt: new Date().toISOString() };
+    db.messages.push(msg);
+    save(db);
+    return msg;
   },
 };
 

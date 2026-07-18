@@ -89,5 +89,23 @@ service cloud.firestore {
     match /ingestTokens/{clientId} {
       allow read, write: if isSelf(clientId) || isCoach();
     }
+
+    // photos — progress photos; client manages own, coach sees all
+    match /photos/{id} {
+      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if isCoach()
+        || (signedIn() && request.resource.data.clientId == request.auth.uid);
+      allow delete: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+    }
+
+    // messages — one thread per client; each side writes as itself
+    match /messages/{id} {
+      allow read: if isCoach() || (signedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if (isCoach() && request.resource.data.from == 'coach')
+        || (signedIn()
+            && request.resource.data.clientId == request.auth.uid
+            && request.resource.data.from == 'client');
+      allow delete: if isCoach();
+    }
   }
 }

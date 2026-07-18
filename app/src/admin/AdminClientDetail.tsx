@@ -23,6 +23,8 @@ import {
   fmtVolume,
 } from '../lib/derive';
 import { dayTotal, mealsForDay } from '../lib/nutrition';
+import { ChatThread } from '../components/ChatThread';
+import { PhotoSection } from '../components/PhotoSection';
 import type { WellnessTargets } from '../lib/types';
 
 /** Inline coach editor for a client's daily wellness targets. */
@@ -305,8 +307,18 @@ export function AdminClientDetail() {
           </Card>
         </div>
 
-        {/* right column: notes */}
-        <Card variant="dark" padding="16px" style={{ alignSelf: 'start' }}>
+        {/* right column: chat, photos, notes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Card variant="dark" padding="16px">
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gray-400)', marginBottom: 12 }}>
+            Chat with {client.name.split(' ')[0]}
+          </div>
+          <ChatThread clientId={client.id} as="coach" height={320} />
+        </Card>
+
+        <PhotoSection clientId={client.id} readOnly />
+
+        <Card variant="dark" padding="16px" style={{ alignSelf: 'stretch' }}>
           <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gray-400)', marginBottom: 12 }}>
             Notes to {client.name.split(' ')[0]}
           </div>
@@ -332,6 +344,7 @@ export function AdminClientDetail() {
             ))}
           </div>
         </Card>
+        </div>
       </div>
     </div>
   );

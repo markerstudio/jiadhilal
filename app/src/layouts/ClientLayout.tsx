@@ -1,6 +1,6 @@
 /* Client app chrome — full-viewport, mobile-first.
    Mobile: fixed bottom tab bar. Desktop (≥900px): left rail + centered column. */
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon, type IconName } from '../components/Icon';
 import { Avatar } from '../components/Avatar';
 import { useAuth } from '../lib/AuthContext';
@@ -19,6 +19,7 @@ export function ClientLayout() {
   const desktop = useDesktop();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (desktop) {
     return (
@@ -97,7 +98,7 @@ export function ClientLayout() {
 
         {/* centered content column */}
         <main style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '28px 24px' }}>
-          <div style={{ width: '100%', maxWidth: 620 }}>
+          <div key={pathname} className="screen-fade" style={{ width: '100%', maxWidth: 620 }}>
             <Outlet />
           </div>
         </main>
@@ -107,7 +108,9 @@ export function ClientLayout() {
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--surface-dark)', paddingBottom: 78 }}>
-      <Outlet />
+      <div key={pathname} className="screen-fade">
+        <Outlet />
+      </div>
       {/* bottom tab bar */}
       <nav
         style={{

@@ -7,6 +7,7 @@ import { Icon } from '../components/Icon';
 import { PageTitle, Loading } from '../components/ui';
 import { useClientData } from '../lib/useClientData';
 import { store } from '../lib/store';
+import { PhotoSection } from '../components/PhotoSection';
 import type { CheckIn } from '../lib/types';
 import {
   todayISO,
@@ -176,6 +177,9 @@ export function ProgressScreen({ clientId }: { clientId?: string }) {
             )}
           </div>
         )}
+
+        {/* progress photos */}
+        {cid && <PhotoSection clientId={cid} readOnly={Boolean(clientId)} />}
 
         {/* PRs */}
         <Card variant="dark" padding="0">
