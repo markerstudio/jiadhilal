@@ -7,6 +7,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { LoginScreen } from './screens/LoginScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import { TrainScreen } from './screens/TrainScreen';
+import { NutritionScreen } from './screens/NutritionScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
@@ -48,6 +49,7 @@ export function App() {
           >
             <Route index element={<TodayScreen />} />
             <Route path="/train" element={<TrainScreen />} />
+            <Route path="/nutrition" element={<NutritionScreen />} />
             <Route path="/progress" element={<ProgressScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
           </Route>

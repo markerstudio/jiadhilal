@@ -1,6 +1,6 @@
 /* Demo-mode DataStore — localStorage-persisted, seeded on first run.
    Lets the whole app (client + admin) work with zero backend config. */
-import type { DataStore, Profile, Program, Assignment, Session, CoachNote } from './types';
+import type { DataStore, Profile, Program, Assignment, Session, CoachNote, NutritionPlan, NutritionLog } from './types';
 import { DEMO_COACH, DEMO_CLIENTS, DEMO_PROGRAM, DEMO_ASSIGNMENTS, DEMO_SESSIONS, DEMO_NOTES } from './demoData';
 
 const KEY = 'jh_demo_db_v1';
@@ -11,6 +11,8 @@ interface DB {
   assignments: Assignment[];
   sessions: Session[];
   notes: CoachNote[];
+  nutritionPlans: NutritionPlan[];
+  nutritionLogs: NutritionLog[];
 }
 
 function seed(): DB {
@@ -20,13 +22,21 @@ function seed(): DB {
     assignments: DEMO_ASSIGNMENTS,
     sessions: DEMO_SESSIONS,
     notes: DEMO_NOTES,
+    nutritionPlans: [],
+    nutritionLogs: [],
   };
 }
 
 function load(): DB {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as DB;
+    if (raw) {
+      const db = JSON.parse(raw) as DB;
+      // migrate DBs persisted before nutrition existed
+      db.nutritionPlans ??= [];
+      db.nutritionLogs ??= [];
+      return db;
+    }
   } catch {
     /* corrupted storage → reseed */
   }
@@ -104,6 +114,27 @@ export const demoStore: DataStore = {
     db.notes.push(note);
     save(db);
     return note;
+  },
+
+  async getNutritionPlan(clientId) {
+    return load().nutritionPlans.find((p) => p.clientId === clientId) ?? null;
+  },
+  async saveNutritionPlan(plan) {
+    const db = load();
+    const i = db.nutritionPlans.findIndex((p) => p.clientId === plan.clientId);
+    if (i >= 0) db.nutritionPlans[i] = plan;
+    else db.nutritionPlans.push(plan);
+    save(db);
+  },
+  async getNutritionLog(clientId, date) {
+    return load().nutritionLogs.find((l) => l.clientId === clientId && l.date === date) ?? null;
+  },
+  async saveNutritionLog(log) {
+    const db = load();
+    const i = db.nutritionLogs.findIndex((l) => l.clientId === log.clientId && l.date === log.date);
+    if (i >= 0) db.nutritionLogs[i] = log;
+    else db.nutritionLogs.push(log);
+    save(db);
   },
 };
 

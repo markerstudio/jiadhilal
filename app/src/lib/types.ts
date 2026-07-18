@@ -72,6 +72,58 @@ export interface CoachNote {
   createdAt: string; // ISO datetime
 }
 
+/* ---- Nutrition ---- */
+
+export type DayType = 'training' | 'rest';
+
+/** One food line inside a meal. Macros are absolute for the stated portion. */
+export interface FoodItem {
+  id: string;
+  name: string;
+  portion: string; // "70 g", "2 large", "1 tsp"
+  kcal: number;
+  protein: number; // g
+  carbs: number; // g
+  fat: number; // g
+}
+
+export interface Meal {
+  id: string;
+  name: string; // "Meal 1"
+  foods: FoodItem[];
+}
+
+export interface MacroTargets {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+/** The prescribed meals + targets for one day type (training vs rest). */
+export interface NutritionDay {
+  targets: MacroTargets;
+  meals: Meal[];
+}
+
+/** A client's meal plan — one template per day type. */
+export interface NutritionPlan {
+  clientId: string;
+  name: string; // "Jiad nutrition plan"
+  days: Record<DayType, NutritionDay>;
+}
+
+/** Per-date tracking state layered on top of the plan template. */
+export interface NutritionLog {
+  clientId: string;
+  date: string; // ISO date (yyyy-mm-dd)
+  dayType: DayType;
+  completedMeals: string[]; // meal ids
+  dayCompleted: boolean;
+  extraFoods: Record<string, FoodItem[]>; // mealId → foods added just for this date
+  extraMeals: Meal[]; // meals added just for this date
+}
+
 /** CRUD surface implemented by demoStore (localStorage) and supabaseStore. */
 export interface DataStore {
   getProfile(id: string): Promise<Profile | null>;
@@ -91,4 +143,9 @@ export interface DataStore {
 
   listNotes(clientId: string): Promise<CoachNote[]>;
   addNote(n: Omit<CoachNote, 'id' | 'createdAt'>): Promise<CoachNote>;
+
+  getNutritionPlan(clientId: string): Promise<NutritionPlan | null>;
+  saveNutritionPlan(p: NutritionPlan): Promise<void>;
+  getNutritionLog(clientId: string, date: string): Promise<NutritionLog | null>;
+  saveNutritionLog(log: NutritionLog): Promise<void>;
 }

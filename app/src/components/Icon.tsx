@@ -30,6 +30,12 @@ import {
   Timer,
   Menu,
   ExternalLink,
+  Apple,
+  UtensilsCrossed,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Undo2,
   type LucideIcon,
 } from 'lucide-react';
 import type { CSSProperties } from 'react';
@@ -67,6 +73,12 @@ const ICONS = {
   timer: Timer,
   menu: Menu,
   'external-link': ExternalLink,
+  apple: Apple,
+  utensils: UtensilsCrossed,
+  'chevron-down': ChevronDown,
+  'chevron-up': ChevronUp,
+  copy: Copy,
+  undo: Undo2,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

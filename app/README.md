@@ -4,8 +4,9 @@ Mobile-first **Vite + React + TypeScript** app on the Jiad Hilal design system.
 Two surfaces in one deploy:
 
 - **Client app** (`/`) — Today dashboard, Train (program + history), active workout with
-  set logging, Progress (volume chart, PRs), Profile. Bottom tab bar on mobile; left rail
-  + centered column on desktop (≥900px).
+  set logging, Nutrition (daily meal plan with training/rest-day macro targets, per-food
+  macros, meal + day completion), Progress (volume chart, PRs), Profile. Bottom tab bar
+  on mobile; left rail + centered column on desktop (≥900px).
 - **Coach admin** (`/admin`, coach role only) — analytics dashboard, client roster +
   client detail (progress, sessions, PRs, program assignment), program builder
   (workouts/exercises/set prescriptions), and coach notes that land on each client's
@@ -58,11 +59,12 @@ src/
   styles/                design tokens (verbatim from the brand system) + base css
   components/            design-system primitives (Button, Card, StatTile, …) + ui helpers
   layouts/               ClientLayout (tabs/rail) · AdminLayout (sidebar/top bar)
-  screens/               client: Login, Today, Train, Workout, Progress, Profile
+  screens/               client: Login, Today, Train, Workout, Nutrition, Progress, Profile
   admin/                 coach: Dashboard, Clients, ClientDetail, Programs, ProgramEditor
   lib/
     types.ts             domain types + DataStore interface
     derive.ts            pure stats derivations (streaks, volume, PRs, next workout)
+    nutrition.ts         macro/meal derivations + the default "Jiad nutrition plan" template
     demoStore.ts/demoData.ts   localStorage store + seed (demo mode)
     firebaseStore.ts     Firebase Auth + Firestore implementation of DataStore
     store.ts             picks the active store from env
