@@ -23,6 +23,43 @@ import {
   fmtVolume,
 } from '../lib/derive';
 import { dayTotal, mealsForDay } from '../lib/nutrition';
+import type { WellnessTargets } from '../lib/types';
+
+/** Inline coach editor for a client's daily wellness targets. */
+function WellnessTargetsEditor({ clientId, initial, onSaved }: { clientId: string; initial: WellnessTargets | null; onSaved: () => void }) {
+  const [steps, setSteps] = React.useState(String(initial?.stepsTarget ?? 10000));
+  const [sleep, setSleep] = React.useState(String(initial?.sleepTarget ?? 8));
+  const [goal, setGoal] = React.useState(initial?.weightGoalKg?.toString() ?? '');
+  const [saving, setSaving] = React.useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    await store.saveWellnessTargets({
+      clientId,
+      stepsTarget: Math.max(0, Number(steps) || 10000),
+      sleepTarget: Math.max(0, Number(sleep) || 8),
+      weightGoalKg: goal.trim() === '' ? undefined : Math.max(0, Number(goal) || 0),
+    });
+    setSaving(false);
+    onSaved();
+  };
+
+  return (
+    <div style={{ padding: '12px 16px 14px', borderTop: '1px solid var(--border-dark)' }}>
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--gray-500)', marginBottom: 8 }}>
+        Daily targets
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <DarkField label="Steps" value={steps} onChange={setSteps} type="number" mono width={110} />
+        <DarkField label="Sleep (h)" value={sleep} onChange={setSleep} type="number" mono width={90} />
+        <DarkField label="Goal wt (kg)" value={goal} onChange={setGoal} type="number" mono width={110} />
+        <Button variant="primary" size="sm" disabled={saving} onClick={() => void save()}>
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /* Client detail — progress, sessions, PRs, program assignment, coach notes. */
 export function AdminClientDetail() {
@@ -32,7 +69,7 @@ export function AdminClientDetail() {
   const [sending, setSending] = React.useState(false);
 
   const { value, loading, reload } = useAsync(async () => {
-    const [client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs] = await Promise.all([
+    const [client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs, checkIns, wellness] = await Promise.all([
       store.getProfile(clientId!),
       store.listSessions(clientId!),
       store.listNotes(clientId!),
@@ -40,12 +77,14 @@ export function AdminClientDetail() {
       store.listPrograms(),
       store.getNutritionPlan(clientId!),
       store.listNutritionLogs(clientId!),
+      store.listCheckIns(clientId!),
+      store.getWellnessTargets(clientId!),
     ]);
-    return { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs };
+    return { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs, checkIns, wellness };
   }, [clientId]);
 
   if (loading || !value) return <Loading />;
-  const { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs } = value;
+  const { client, sessions, notes, assignment, programs, nutritionPlan, nutritionLogs, checkIns, wellness } = value;
   if (!client) return <EmptyState title="Client not found" />;
 
   const today = todayISO();
@@ -225,6 +264,30 @@ export function AdminClientDetail() {
                   </div>
                 );
               })}
+          </Card>
+
+          {/* daily check-ins — last 7 days + coach targets */}
+          <Card variant="dark" padding="0">
+            <div style={{ padding: '14px 16px 8px', fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gray-400)' }}>
+              Check-ins · last 7 days
+            </div>
+            {checkIns.filter((c) => c.date > addDays(today, -7)).length === 0 && (
+              <EmptyState title="No check-ins yet" hint={`${client.name.split(' ')[0]} logs weight, steps, sleep and resting HR on their Today screen.`} />
+            )}
+            {checkIns
+              .filter((c) => c.date > addDays(today, -7))
+              .map((c) => (
+                <div key={c.date} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderTop: '1px solid var(--border-dark)', fontFamily: 'var(--font-mono)', fontSize: 12.5, fontWeight: 700 }}>
+                  <span style={{ width: 84, fontFamily: 'var(--font-sans)', color: 'var(--gray-300)' }}>{relativeDay(c.date, today)}</span>
+                  <span style={{ flex: 1, textAlign: 'right', color: 'var(--gray-300)' }}>{c.weightKg != null ? `${c.weightKg} kg` : '—'}</span>
+                  <span style={{ flex: 1, textAlign: 'right', color: wellness && c.steps != null && c.steps >= wellness.stepsTarget ? 'var(--green-neon)' : 'var(--gray-400)' }}>
+                    {c.steps != null ? `${c.steps.toLocaleString()} st` : '—'}
+                  </span>
+                  <span style={{ flex: 1, textAlign: 'right', color: 'var(--gray-400)' }}>{c.sleepHrs != null ? `${c.sleepHrs} h` : '—'}</span>
+                  <span style={{ flex: 1, textAlign: 'right', color: 'var(--gray-400)' }}>{c.restingHr != null ? `${c.restingHr} bpm` : '—'}</span>
+                </div>
+              ))}
+            <WellnessTargetsEditor clientId={client.id} initial={wellness} onSaved={() => void reload()} />
           </Card>
 
           <Card variant="dark" padding="0">

@@ -7,6 +7,8 @@
      notes/{id}            { clientId, body, createdAt }
      nutritionPlans/{clientId}        { name, days: { training, rest } }
      nutritionLogs/{clientId_date}    { clientId, date, dayType, completedMeals, ... }
+     checkins/{clientId_date}         { clientId, date, weightKg?, steps?, sleepHrs?, restingHr? }
+     wellnessTargets/{clientId}       { stepsTarget, sleepTarget, weightGoalKg? }
    Security rules: ../../firebase/firestore.rules */
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -23,7 +25,7 @@ import {
   where,
   type Firestore,
 } from 'firebase/firestore';
-import type { DataStore, Profile, Program, Session, CoachNote, NutritionPlan, NutritionLog } from './types';
+import type { DataStore, Profile, Program, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn } from './types';
 
 /* Firebase web config is public by design (security comes from Firestore rules).
    Baked-in defaults point at the production project; env vars still override,
@@ -195,5 +197,30 @@ export const firebaseStore: DataStore = {
   async listNutritionLogs(clientId) {
     const snap = await getDocs(query(collection(db(), 'nutritionLogs'), where('clientId', '==', clientId)));
     return snap.docs.map((d) => toNutritionLog(d.data())).sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  async getCheckIn(clientId, date) {
+    const snap = await getDoc(doc(db(), 'checkins', `${clientId}_${date}`));
+    return snap.exists() ? (snap.data() as CheckIn) : null;
+  },
+  async saveCheckIn(c) {
+    // strip undefined optionals — Firestore rejects undefined field values
+    const data = Object.fromEntries(Object.entries(c).filter(([, v]) => v !== undefined));
+    await setDoc(doc(db(), 'checkins', `${c.clientId}_${c.date}`), data);
+  },
+  async listCheckIns(clientId) {
+    const snap = await getDocs(query(collection(db(), 'checkins'), where('clientId', '==', clientId)));
+    return snap.docs.map((d) => d.data() as CheckIn).sort((a, b) => b.date.localeCompare(a.date));
+  },
+  async getWellnessTargets(clientId) {
+    const snap = await getDoc(doc(db(), 'wellnessTargets', clientId));
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    return { clientId, stepsTarget: d.stepsTarget ?? 10000, sleepTarget: d.sleepTarget ?? 8, weightGoalKg: d.weightGoalKg ?? undefined };
+  },
+  async saveWellnessTargets(t) {
+    const data: Record<string, unknown> = { stepsTarget: t.stepsTarget, sleepTarget: t.sleepTarget };
+    if (t.weightGoalKg !== undefined) data.weightGoalKg = t.weightGoalKg;
+    await setDoc(doc(db(), 'wellnessTargets', t.clientId), data);
   },
 };

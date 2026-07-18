@@ -6,6 +6,8 @@ import { Badge } from '../components/Badge';
 import { Icon } from '../components/Icon';
 import { PageTitle, Loading } from '../components/ui';
 import { useClientData } from '../lib/useClientData';
+import { store } from '../lib/store';
+import type { CheckIn } from '../lib/types';
 import {
   todayISO,
   addDays,
@@ -18,10 +20,40 @@ import {
 
 type Range = 'Week' | 'Month' | 'Year';
 
+/** Minimal SVG line chart for the body-weight trend. */
+function WeightChart({ weights }: { weights: number[] }) {
+  const w = 100;
+  const h = 44;
+  const min = Math.min(...weights);
+  const max = Math.max(...weights);
+  const span = Math.max(0.5, max - min);
+  const pts = weights.map((v, i) => {
+    const x = weights.length === 1 ? w / 2 : (i / (weights.length - 1)) * w;
+    const y = h - 4 - ((v - min) / span) * (h - 8);
+    return `${x},${y}`;
+  });
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height: 90, display: 'block' }}>
+      <polyline points={pts.join(' ')} fill="none" stroke="var(--purple-400)" strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={pts[pts.length - 1].split(',')[0]} cy={pts[pts.length - 1].split(',')[1]} r={2.2} fill="var(--green-neon)" />
+    </svg>
+  );
+}
+
 /* Progress — volume chart, range totals, recent PRs. All derived from sessions. */
 export function ProgressScreen({ clientId }: { clientId?: string }) {
-  const { data, loading } = useClientData(clientId);
+  const { data, loading, clientId: cid } = useClientData(clientId);
   const [range, setRange] = React.useState<Range>('Month');
+  const [checkIns, setCheckIns] = React.useState<CheckIn[]>([]);
+
+  React.useEffect(() => {
+    if (!cid) return;
+    let alive = true;
+    void store.listCheckIns(cid).then((c) => alive && setCheckIns(c));
+    return () => {
+      alive = false;
+    };
+  }, [cid]);
 
   if (loading || !data) return <Loading />;
   const { sessions } = data;
@@ -47,6 +79,14 @@ export function ProgressScreen({ clientId }: { clientId?: string }) {
   const vol = weeklyVolume(sessions, today);
   const deltaPct = vol.volume - vol.delta > 0 ? Math.round((vol.delta / (vol.volume - vol.delta)) * 100) : 0;
   const prs = recentPRs(sessions, 4);
+
+  // body metrics from daily check-ins, within the selected range (oldest → newest)
+  const inRangeCheckIns = checkIns.filter((c) => c.date >= cutoff).sort((a, b) => a.date.localeCompare(b.date));
+  const weights = inRangeCheckIns.filter((c) => c.weightKg != null) as (CheckIn & { weightKg: number })[];
+  const weightDelta = weights.length >= 2 ? weights[weights.length - 1].weightKg - weights[0].weightKg : null;
+  const stepDays = inRangeCheckIns.filter((c) => c.steps != null);
+  const avgSteps = stepDays.length ? Math.round(stepDays.reduce((a, c) => a + (c.steps ?? 0), 0) / stepDays.length) : null;
+  const latestHr = [...inRangeCheckIns].reverse().find((c) => c.restingHr != null)?.restingHr ?? null;
 
   return (
     <div style={{ color: 'var(--white)', paddingBottom: 20 }}>
@@ -102,6 +142,40 @@ export function ProgressScreen({ clientId }: { clientId?: string }) {
           <StatTile dark value={String(inRange.length)} label="Workouts" delta={`this ${range.toLowerCase()}`} deltaTone="neutral" />
           <StatTile dark value={hours.toFixed(1)} unit="h" label="Time trained" delta={`this ${range.toLowerCase()}`} deltaTone="neutral" />
         </div>
+
+        {/* body weight trend from daily check-ins */}
+        {weights.length >= 2 && (
+          <Card variant="dark" padding="18px">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gray-400)' }}>
+                  Body weight · {range.toLowerCase()}
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, marginTop: 2 }}>
+                  {weights[weights.length - 1].weightKg.toFixed(1)} <span style={{ fontSize: 15, color: 'var(--purple-300)' }}>kg</span>
+                </div>
+              </div>
+              {weightDelta != null && (
+                <Badge tone={weightDelta <= 0 ? 'green' : 'red'} variant="soft" dot>
+                  {weightDelta >= 0 ? '+' : ''}
+                  {weightDelta.toFixed(1)} kg
+                </Badge>
+              )}
+            </div>
+            <WeightChart weights={weights.map((w) => w.weightKg)} />
+          </Card>
+        )}
+
+        {(avgSteps != null || latestHr != null) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {avgSteps != null && (
+              <StatTile dark value={avgSteps.toLocaleString()} label="Avg steps / day" delta={`this ${range.toLowerCase()}`} deltaTone="neutral" icon={<Icon name="footprints" size={16} />} />
+            )}
+            {latestHr != null && (
+              <StatTile dark value={String(latestHr)} unit="bpm" label="Resting HR" delta="latest" deltaTone="neutral" icon={<Icon name="heart" size={16} />} />
+            )}
+          </div>
+        )}
 
         {/* PRs */}
         <Card variant="dark" padding="0">

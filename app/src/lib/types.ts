@@ -124,6 +124,26 @@ export interface NutritionLog {
   extraMeals: Meal[]; // meals added just for this date
 }
 
+/* ---- Daily check-in (wellness) ---- */
+
+/** One day's self-reported wellness numbers. All optional — log what you have. */
+export interface CheckIn {
+  clientId: string;
+  date: string; // ISO date (yyyy-mm-dd)
+  weightKg?: number;
+  steps?: number;
+  sleepHrs?: number;
+  restingHr?: number; // bpm
+}
+
+/** Coach-set daily wellness targets per client. */
+export interface WellnessTargets {
+  clientId: string;
+  stepsTarget: number;
+  sleepTarget: number; // hours
+  weightGoalKg?: number;
+}
+
 /** CRUD surface implemented by demoStore (localStorage) and supabaseStore. */
 export interface DataStore {
   getProfile(id: string): Promise<Profile | null>;
@@ -149,4 +169,10 @@ export interface DataStore {
   getNutritionLog(clientId: string, date: string): Promise<NutritionLog | null>;
   saveNutritionLog(log: NutritionLog): Promise<void>;
   listNutritionLogs(clientId: string): Promise<NutritionLog[]>;
+
+  getCheckIn(clientId: string, date: string): Promise<CheckIn | null>;
+  saveCheckIn(c: CheckIn): Promise<void>;
+  listCheckIns(clientId: string): Promise<CheckIn[]>;
+  getWellnessTargets(clientId: string): Promise<WellnessTargets | null>;
+  saveWellnessTargets(t: WellnessTargets): Promise<void>;
 }

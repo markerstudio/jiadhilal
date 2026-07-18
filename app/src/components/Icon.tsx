@@ -36,6 +36,9 @@ import {
   ChevronUp,
   Copy,
   Undo2,
+  Heart,
+  Footprints,
+  Scale,
   type LucideIcon,
 } from 'lucide-react';
 import type { CSSProperties } from 'react';
@@ -79,6 +82,9 @@ const ICONS = {
   'chevron-up': ChevronUp,
   copy: Copy,
   undo: Undo2,
+  heart: Heart,
+  footprints: Footprints,
+  scale: Scale,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
