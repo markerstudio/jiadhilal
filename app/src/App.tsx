@@ -14,6 +14,7 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { AdminDashboard } from './admin/AdminDashboard';
 import { AdminClients } from './admin/AdminClients';
 import { AdminClientDetail } from './admin/AdminClientDetail';
+import { AdminNutritionEditor } from './admin/AdminNutritionEditor';
 import { AdminPrograms } from './admin/AdminPrograms';
 import { AdminProgramEditor } from './admin/AdminProgramEditor';
 
@@ -74,6 +75,7 @@ export function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="clients" element={<AdminClients />} />
             <Route path="clients/:clientId" element={<AdminClientDetail />} />
+            <Route path="clients/:clientId/nutrition" element={<AdminNutritionEditor />} />
             <Route path="programs" element={<AdminPrograms />} />
             <Route path="programs/:programId" element={<AdminProgramEditor />} />
           </Route>

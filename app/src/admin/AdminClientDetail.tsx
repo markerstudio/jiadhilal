@@ -122,6 +122,14 @@ export function AdminClientDetail() {
             ))}
           </select>
         </label>
+        <Button
+          variant="secondary"
+          size="sm"
+          iconLeft={<Icon name="apple" size={16} />}
+          onClick={() => navigate(`/admin/clients/${client.id}/nutrition`)}
+        >
+          Nutrition plan
+        </Button>
       </div>
 
       {/* stats */}
