@@ -223,4 +223,12 @@ export const firebaseStore: DataStore = {
     if (t.weightGoalKg !== undefined) data.weightGoalKg = t.weightGoalKg;
     await setDoc(doc(db(), 'wellnessTargets', t.clientId), data);
   },
+
+  async getIngestToken(clientId) {
+    const snap = await getDoc(doc(db(), 'ingestTokens', clientId));
+    return snap.exists() ? (snap.data().token as string) : null;
+  },
+  async saveIngestToken(clientId, token) {
+    await setDoc(doc(db(), 'ingestTokens', clientId), { token });
+  },
 };

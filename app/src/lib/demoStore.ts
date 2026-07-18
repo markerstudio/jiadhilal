@@ -15,6 +15,7 @@ interface DB {
   nutritionLogs: NutritionLog[];
   checkIns: CheckIn[];
   wellnessTargets: WellnessTargets[];
+  ingestTokens: { clientId: string; token: string }[];
 }
 
 function seed(): DB {
@@ -28,6 +29,7 @@ function seed(): DB {
     nutritionLogs: [],
     checkIns: [],
     wellnessTargets: [],
+    ingestTokens: [],
   };
 }
 
@@ -41,6 +43,7 @@ function load(): DB {
       db.nutritionLogs ??= [];
       db.checkIns ??= [];
       db.wellnessTargets ??= [];
+      db.ingestTokens ??= [];
       return db;
     }
   } catch {
@@ -171,6 +174,17 @@ export const demoStore: DataStore = {
     const i = db.wellnessTargets.findIndex((x) => x.clientId === t.clientId);
     if (i >= 0) db.wellnessTargets[i] = t;
     else db.wellnessTargets.push(t);
+    save(db);
+  },
+
+  async getIngestToken(clientId) {
+    return load().ingestTokens.find((t) => t.clientId === clientId)?.token ?? null;
+  },
+  async saveIngestToken(clientId, token) {
+    const db = load();
+    const i = db.ingestTokens.findIndex((t) => t.clientId === clientId);
+    if (i >= 0) db.ingestTokens[i] = { clientId, token };
+    else db.ingestTokens.push({ clientId, token });
     save(db);
   },
 };

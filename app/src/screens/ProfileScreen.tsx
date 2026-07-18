@@ -5,6 +5,7 @@ import { Switch } from '../components/Switch';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Icon, type IconName } from '../components/Icon';
+import { HealthSyncCard } from '../components/HealthSyncCard';
 import { displayStyle, Loading } from '../components/ui';
 import { useAuth } from '../lib/AuthContext';
 import { useClientData } from '../lib/useClientData';
@@ -65,6 +66,8 @@ export function ProfileScreen() {
             </div>
           ))}
         </Card>
+
+        <HealthSyncCard />
 
         <Button variant="secondary" fullWidth iconLeft={<Icon name="message-square" size={17} />}>
           Message your coach

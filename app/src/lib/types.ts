@@ -175,4 +175,8 @@ export interface DataStore {
   listCheckIns(clientId: string): Promise<CheckIn[]>;
   getWellnessTargets(clientId: string): Promise<WellnessTargets | null>;
   saveWellnessTargets(t: WellnessTargets): Promise<void>;
+
+  /** Secret used by the Apple Health / Shortcuts sync endpoint (api/checkin). */
+  getIngestToken(clientId: string): Promise<string | null>;
+  saveIngestToken(clientId: string, token: string): Promise<void>;
 }
