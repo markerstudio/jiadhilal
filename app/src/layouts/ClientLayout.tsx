@@ -10,6 +10,7 @@ import logoWhite from '../assets/logo-mark-white.png';
 const TABS: { to: string; icon: IconName; label: string; end?: boolean }[] = [
   { to: '/', icon: 'house', label: 'Today', end: true },
   { to: '/train', icon: 'dumbbell', label: 'Train' },
+  { to: '/nutrition', icon: 'apple', label: 'Nutrition' },
   { to: '/progress', icon: 'trending-up', label: 'Progress' },
   { to: '/profile', icon: 'user', label: 'Profile' },
 ];

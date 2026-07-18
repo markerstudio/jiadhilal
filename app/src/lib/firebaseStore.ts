@@ -5,6 +5,8 @@
      assignments/{clientId}{ programId, startDate }
      sessions/{id}         { clientId, workoutId, workoutName, date, durationMin, exercises }
      notes/{id}            { clientId, body, createdAt }
+     nutritionPlans/{clientId}        { name, days: { training, rest } }
+     nutritionLogs/{clientId_date}    { clientId, date, dayType, completedMeals, ... }
    Security rules: ../../firebase/firestore.rules */
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -21,7 +23,7 @@ import {
   where,
   type Firestore,
 } from 'firebase/firestore';
-import type { DataStore, Profile, Program, Session, CoachNote } from './types';
+import type { DataStore, Profile, Program, Session, CoachNote, NutritionPlan, NutritionLog } from './types';
 
 /* Firebase web config is public by design (security comes from Firestore rules).
    Baked-in defaults point at the production project; env vars still override,
@@ -73,6 +75,22 @@ const toSession = (id: string, d: any): Session => ({
   date: d.date,
   durationMin: d.durationMin ?? 0,
   exercises: d.exercises ?? [],
+});
+
+const toNutritionPlan = (clientId: string, d: any): NutritionPlan => ({
+  clientId,
+  name: d.name ?? 'Nutrition plan',
+  days: d.days,
+});
+
+const toNutritionLog = (d: any): NutritionLog => ({
+  clientId: d.clientId,
+  date: d.date,
+  dayType: d.dayType ?? 'training',
+  completedMeals: d.completedMeals ?? [],
+  dayCompleted: d.dayCompleted ?? false,
+  extraFoods: d.extraFoods ?? {},
+  extraMeals: d.extraMeals ?? [],
 });
 
 const toNote = (id: string, d: any): CoachNote => ({
@@ -158,5 +176,20 @@ export const firebaseStore: DataStore = {
     const data = { ...n, createdAt: new Date().toISOString() };
     const ref = await addDoc(collection(db(), 'notes'), data);
     return { ...data, id: ref.id };
+  },
+
+  async getNutritionPlan(clientId) {
+    const snap = await getDoc(doc(db(), 'nutritionPlans', clientId));
+    return snap.exists() ? toNutritionPlan(clientId, snap.data()) : null;
+  },
+  async saveNutritionPlan(p) {
+    await setDoc(doc(db(), 'nutritionPlans', p.clientId), { name: p.name, days: p.days });
+  },
+  async getNutritionLog(clientId, date) {
+    const snap = await getDoc(doc(db(), 'nutritionLogs', `${clientId}_${date}`));
+    return snap.exists() ? toNutritionLog(snap.data()) : null;
+  },
+  async saveNutritionLog(log) {
+    await setDoc(doc(db(), 'nutritionLogs', `${log.clientId}_${log.date}`), log);
   },
 };
