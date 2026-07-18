@@ -69,7 +69,7 @@ export function ProfileScreen() {
 
         <HealthSyncCard />
 
-        <Button variant="secondary" fullWidth iconLeft={<Icon name="message-square" size={17} />}>
+        <Button variant="secondary" fullWidth iconLeft={<Icon name="message-square" size={17} />} onClick={() => navigate('/chat')}>
           Message your coach
         </Button>
 

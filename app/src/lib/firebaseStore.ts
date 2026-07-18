@@ -25,7 +25,7 @@ import {
   where,
   type Firestore,
 } from 'firebase/firestore';
-import type { DataStore, Profile, Program, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn } from './types';
+import type { DataStore, Profile, Program, Session, CoachNote, NutritionPlan, NutritionLog, CheckIn, ProgressPhoto, ChatMessage } from './types';
 
 /* Firebase web config is public by design (security comes from Firestore rules).
    Baked-in defaults point at the production project; env vars still override,
@@ -230,5 +230,32 @@ export const firebaseStore: DataStore = {
   },
   async saveIngestToken(clientId, token) {
     await setDoc(doc(db(), 'ingestTokens', clientId), { token });
+  },
+
+  async listPhotos(clientId) {
+    const snap = await getDocs(query(collection(db(), 'photos'), where('clientId', '==', clientId)));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as Omit<ProgressPhoto, 'id'>) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+  async addPhoto(p) {
+    const data = { ...p, createdAt: new Date().toISOString() };
+    const ref = await addDoc(collection(db(), 'photos'), data);
+    return { ...data, id: ref.id };
+  },
+  async deletePhoto(id) {
+    await deleteDoc(doc(db(), 'photos', id));
+  },
+
+  async listMessages(clientId) {
+    const snap = await getDocs(query(collection(db(), 'messages'), where('clientId', '==', clientId)));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as Omit<ChatMessage, 'id'>) }))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+  async sendMessage(m) {
+    const data = { ...m, createdAt: new Date().toISOString() };
+    const ref = await addDoc(collection(db(), 'messages'), data);
+    return { ...data, id: ref.id };
   },
 };

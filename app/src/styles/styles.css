@@ -52,6 +52,21 @@ button {
   scrollbar-width: none;
 }
 
+/* screens slide-fade in as you switch tabs */
+@keyframes jh-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.screen-fade {
+  animation: jh-screen-in var(--dur-slow) var(--ease-out) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

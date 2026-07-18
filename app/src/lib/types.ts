@@ -144,6 +144,25 @@ export interface WellnessTargets {
   weightGoalKg?: number;
 }
 
+/* ---- Progress photos & chat ---- */
+
+/** A progress photo, stored as a compressed JPEG data URL (fits Firestore's 1MB doc limit). */
+export interface ProgressPhoto {
+  id: string;
+  clientId: string;
+  date: string; // ISO date
+  data: string; // data:image/jpeg;base64,...
+  createdAt: string; // ISO datetime
+}
+
+export interface ChatMessage {
+  id: string;
+  clientId: string; // the thread — one per client
+  from: 'coach' | 'client';
+  body: string;
+  createdAt: string; // ISO datetime
+}
+
 /** CRUD surface implemented by demoStore (localStorage) and supabaseStore. */
 export interface DataStore {
   getProfile(id: string): Promise<Profile | null>;
@@ -179,4 +198,11 @@ export interface DataStore {
   /** Secret used by the Apple Health / Shortcuts sync endpoint (api/checkin). */
   getIngestToken(clientId: string): Promise<string | null>;
   saveIngestToken(clientId: string, token: string): Promise<void>;
+
+  listPhotos(clientId: string): Promise<ProgressPhoto[]>;
+  addPhoto(p: Omit<ProgressPhoto, 'id' | 'createdAt'>): Promise<ProgressPhoto>;
+  deletePhoto(id: string): Promise<void>;
+
+  listMessages(clientId: string): Promise<ChatMessage[]>;
+  sendMessage(m: Omit<ChatMessage, 'id' | 'createdAt'>): Promise<ChatMessage>;
 }

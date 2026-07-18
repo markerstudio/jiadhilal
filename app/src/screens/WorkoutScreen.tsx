@@ -40,8 +40,26 @@ export function WorkoutScreen() {
   const [logged, setLogged] = React.useState<LoggedSet[][] | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [elapsed, setElapsed] = React.useState(0);
+  const [restLeft, setRestLeft] = React.useState<number | null>(null); // rest countdown (s)
 
   const workout = data?.program?.workouts.find((w) => w.id === workoutId) ?? null;
+
+  // last logged performance per exercise name (most recent session first)
+  const lastPerf = React.useMemo(() => {
+    const map = new Map<string, { w: number; r: number; date: string }>();
+    if (!data) return map;
+    const ordered = [...data.sessions].sort((a, b) => b.date.localeCompare(a.date));
+    for (const s of ordered) {
+      for (const ex of s.exercises) {
+        if (map.has(ex.name)) continue;
+        const done = ex.sets.filter((set) => set.done);
+        if (!done.length) continue;
+        const top = done.reduce((a, b) => (b.w > a.w ? b : a));
+        map.set(ex.name, { w: top.w, r: top.r, date: s.date });
+      }
+    }
+    return map;
+  }, [data]);
 
   React.useEffect(() => {
     if (workout && !logged) {
@@ -53,6 +71,17 @@ export function WorkoutScreen() {
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // rest countdown ticks once per second while active
+  React.useEffect(() => {
+    if (restLeft == null) return;
+    if (restLeft <= 0) {
+      const t = setTimeout(() => setRestLeft(null), 4000); // linger on "GO", then hide
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setRestLeft(restLeft - 1), 1000);
+    return () => clearTimeout(t);
+  }, [restLeft]);
 
   if (loading || !data) return <Loading />;
   if (!workout || !logged) {
@@ -69,10 +98,13 @@ export function WorkoutScreen() {
   const total = logged.reduce((a, ex) => a + ex.length, 0);
   const completed = logged.reduce((a, ex) => a + ex.filter((s) => s.done).length, 0);
 
-  const update = (ei: number, si: number, patch: Partial<LoggedSet>) =>
+  const update = (ei: number, si: number, patch: Partial<LoggedSet>) => {
     setLogged((prev) =>
       prev!.map((ex, i) => (i === ei ? ex.map((s, j) => (j === si ? { ...s, ...patch } : s)) : ex)),
     );
+    if (patch.done === true) setRestLeft(90); // checking a set starts the rest clock
+    if (patch.done === false) setRestLeft(null);
+  };
 
   const finish = async () => {
     if (!clientId) return;
@@ -141,6 +173,12 @@ export function WorkoutScreen() {
                     </a>
                     <div style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600, marginTop: 2 }}>
                       {ex.sets.length} × {ex.sets[0]?.r ?? '—'}
+                      {lastPerf.has(ex.name) && (
+                        <span style={{ color: 'var(--purple-300)', fontFamily: 'var(--font-mono)' }}>
+                          {' '}
+                          · last {lastPerf.get(ex.name)!.w}kg×{lastPerf.get(ex.name)!.r}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Badge tone={doneCount === sets.length ? 'green' : 'neutral'} variant="soft">
@@ -194,7 +232,7 @@ export function WorkoutScreen() {
           })}
 
           <Button
-            variant="primary"
+            variant={completed === total ? 'neon' : 'primary'}
             size="lg"
             fullWidth
             disabled={saving || completed === 0}
@@ -204,6 +242,52 @@ export function WorkoutScreen() {
             {saving ? 'Saving…' : 'Finish workout'}
           </Button>
         </div>
+
+        {/* rest timer pill */}
+        {restLeft != null && (
+          <div
+            style={{
+              position: 'fixed',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bottom: 'calc(20px + env(safe-area-inset-bottom))',
+              zIndex: 20,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              background: restLeft <= 0 ? 'var(--green-neon)' : 'rgba(20,17,24,0.92)',
+              color: restLeft <= 0 ? '#003d00' : 'var(--white)',
+              border: restLeft <= 0 ? 'none' : '1px solid var(--purple-500)',
+              boxShadow: restLeft <= 0 ? 'var(--glow-green)' : 'var(--shadow-brand)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '10px 18px',
+              backdropFilter: 'var(--blur-glass)',
+              WebkitBackdropFilter: 'var(--blur-glass)',
+            }}
+          >
+            <Icon name="timer" size={18} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 17, minWidth: 52, textAlign: 'center' }}>
+              {restLeft <= 0 ? 'GO!' : mmss(restLeft)}
+            </span>
+            {restLeft > 0 && (
+              <>
+                <button
+                  onClick={() => setRestLeft(restLeft + 30)}
+                  style={{ background: 'none', border: 'none', color: 'var(--purple-300)', fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}
+                >
+                  +30s
+                </button>
+                <button
+                  onClick={() => setRestLeft(null)}
+                  aria-label="Skip rest"
+                  style={{ background: 'none', border: 'none', color: 'var(--gray-500)', cursor: 'pointer', padding: 0, display: 'flex' }}
+                >
+                  <Icon name="x" size={16} />
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
