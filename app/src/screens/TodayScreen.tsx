@@ -36,10 +36,14 @@ export function TodayScreen() {
     if (!user) return;
     let alive = true;
     void (async () => {
-      const plan = await store.getNutritionPlan(user.id);
-      if (!plan) return; // seeded on first Nutrition visit
-      const log = await store.getNutritionLog(user.id, todayISO());
-      if (alive) setNutrition({ plan, log });
+      try {
+        const plan = await store.getNutritionPlan(user.id);
+        if (!plan) return; // seeded on first Nutrition visit
+        const log = await store.getNutritionLog(user.id, todayISO());
+        if (alive) setNutrition({ plan, log });
+      } catch (e) {
+        console.error('today nutrition load failed', e);
+      }
     })();
     return () => {
       alive = false;
